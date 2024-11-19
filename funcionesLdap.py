@@ -26,18 +26,16 @@ def iniciar_sesion_ad(servidor, dominio, base_dn, usuario, password):
     except Exception as e:
         return None, str(e)
 
-
+#Función para crear usuario
 def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data):
     try:
-        # Conectar al servidor LDAP
+        #Nos conectamos al servidor mediante LDAP
         server = Server(servidor, use_ssl=servidor.startswith("ldaps"), get_info=ALL)
         conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
-
-        # Construir el DN para la OU=USUARIOS
+        # Construir el DN donde se guardará el usuario creado
         dn = f"CN={user_data['username']},{base_dn}"
         print(f"Intentando crear el usuario con DN: {dn}")
-
-        # Definir los atributos del usuario
+        #Diccionario con los atributos del usuario a crear - Revisar a partir de aqui
         atributos = {
             'objectClass': ['top', 'person', 'organizationalPerson', 'user'],
             'cn': user_data['username'],
@@ -47,10 +45,8 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
             'userPassword': user_data['password'],
             'userAccountControl': 512  # Habilitar cuenta
         }
-
         # Intentar crear el usuario
         conn.add(dn, attributes=atributos)
-
         if conn.result['description'] == 'success':
             print(f"Usuario {user_data['username']} creado exitosamente en OU=USUARIOS.")
         else:
@@ -58,10 +54,6 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
 
     except Exception as e:
         print(f"Error al crear usuario: {e}")
-
-
-
-
 
 
 def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, username, user_data):

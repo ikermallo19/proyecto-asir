@@ -1,5 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad
+import logging
+
+# Configurar logging para ldap3
+logging.basicConfig(level=logging.DEBUG)
 
 
 app = Flask(__name__)
@@ -19,7 +23,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        # Intentar iniciar sesión en el AD
+        # Intentamos iniciar sesión en el AD
         user_data, error = iniciar_sesion_ad(AD_SERVER, AD_DOMAIN, AD_BASE_DN, username, password)
 
         if error:
