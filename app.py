@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad
-import logging
+from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario
+# import logging
 
 # Configurar logging para ldap3
-logging.basicConfig(level=logging.DEBUG)
-
-
+# logging.basicConfig(
+#     filename='app.log',
+#     level=logging.DEBUG,
+#     format='%(asctime)s - %(levelname)s - %(message)s'
+# )
 app = Flask(__name__)
 app.secret_key = 'secret_key'
 
@@ -13,7 +15,6 @@ app.secret_key = 'secret_key'
 AD_SERVER = 'ldaps://leon.datanet.local'    #Servidor Active Directory
 AD_DOMAIN = 'datanet.local'                 #Dominio
 AD_BASE_DN = 'ou=USUARIOS,ou=DATANET,dc=datanet,dc=local'   #Ruta usuario
-
 
 
 #Iniciar sesión
@@ -38,9 +39,7 @@ def login():
 
         flash("Inicio de sesión exitoso.", "success")
         return redirect(url_for("dashboard"))
-
     return render_template("login.html")
-
 
 #Cerrar Sesión
 @app.route("/logout")
@@ -48,9 +47,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-
-
-#Botones a visualizar
+#Pantalla inicio
 @app.route("/dashboard")
 def dashboard():
     if 'username' not in session:
@@ -79,7 +76,7 @@ def new_user():
                 "givenName": request.form["givenName"],
                 "sn": request.form["sn"]
             }
-
+            #print (user_data);
             # Llamar a la función para crear el usuario
             crear_usuario_ad(
                 AD_SERVER,
@@ -149,6 +146,40 @@ def delete_user(username):
 
     return redirect(url_for("dashboard"))
 
+
+#Info usuario
+@app.route("/user/<username>")
+def user_detail(username):
+    if 'username' not in session:
+        flash("Debes iniciar sesión primero.", "danger")
+        return redirect(url_for("login"))
+
+    try:
+        print(f"Intentando obtener detalles para el usuario: {username}")
+
+        # Llamar a la función para obtener detalles del usuario
+        user_data, error = obtener_detalle_usuario(
+            AD_SERVER, 
+            AD_DOMAIN, 
+            AD_BASE_DN, 
+            session['username'], 
+            session['user_data']['password'], 
+            username
+        )
+
+        if error:
+            print(f"Error devuelto: {error}")
+            flash(error, "warning")
+            return redirect(url_for("dashboard"))
+
+        print(f"Datos del usuario obtenidos: {user_data}")
+
+        return render_template("user_details.html", user=user_data)
+
+    except Exception as e:
+        print(f"Excepción al obtener datos del usuario: {e}")
+        flash(f"Error al obtener datos del usuario: {e}", "danger")
+        return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Usuario{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Información del Usuario</h2>
+    <table class="table table-striped mt-3">
+        <tbody>
+            <tr>
+                <th>Nombre de Usuario (CN):</th>
+                <td>{{ user.get('cn', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Nombre:</th>
+                <td>{{ user.get('givenName', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Apellidos:</th>
+                <td>{{ user.get('sn', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Email:</th>
+                <td>{{ user.get('mail', '') | join(', ') }}</td>
+            </tr>
+            <tr>
+                <th>Grupos:</th>
+                <td>{{ ', '.join(user.get('memberOf', [])) }}</td>
+            </tr>
+            <tr>
+                <th>Distinguished Name (DN):</th>
+                <td>{{ user.get('distinguishedName', '') | join(', ')}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
+</div>
+{% endblock %}
