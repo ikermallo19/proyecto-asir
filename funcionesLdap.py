@@ -42,13 +42,15 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
             'givenName': user_data.get('givenName', ''),
             'sn': user_data.get('sn', ''),
             'sAMAccountName': user_data['username'],
-            'userPassword': user_data['password'],
-            'userAccountControl': 512  # Habilitar cuenta
+            'userAccountControl': 546  #La cuenta está deshabilitada
         }
-        # Intentar crear el usuario
+        #Crear el usuario
         conn.add(dn, attributes=atributos)
         if conn.result['description'] == 'success':
             print(f"Usuario {user_data['username']} creado exitosamente en OU=USUARIOS.")
+            #Habilitamos cuenta y creamos contraseña
+            conn.extend.microsoft.modify_password(dn, user_data['password'])    #Le ponemos la contraseña al usuario
+            conn.modify(dn, {'userAccountControl': [(MODIFY_REPLACE, [512])]})  #Habilitamos el usuario
         else:
             print(f"Error al crear usuario: {conn.result['description']} - {conn.result['message']}")
 
@@ -65,7 +67,6 @@ def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, userna
         conn.modify(dn, changes=cambios)
     except Exception as e:
         print(f"Error al editar usuario: {e}")
-
 
 def eliminar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, username):
     try:

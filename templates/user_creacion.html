@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Usuario{% endblock %}
+
+{% block content %}
+<h2>{{ action }} Usuario</h2>
+<form method="POST" action="{{ url_for('new_user') }}">
+    <div class="mb-3">
+        <label for="username" class="form-label">Nombre de usuario</label>
+        <input type="text" name="username" id="username" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" name="password" id="password" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="givenName" class="form-label">Nombre</label>
+        <input type="text" name="givenName" id="givenName" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="sn" class="form-label">Apellidos</label>
+        <input type="text" name="sn" id="sn" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="nombrecompleto" class="form-label">Nombre Completo</label>
+        <input type="text" name="nombrecompleto" id="nombrecompleto" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Crear Usuario</button>
+</form>
+
+
+
+{% endblock %}
