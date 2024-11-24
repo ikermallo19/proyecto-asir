@@ -5,7 +5,7 @@ from ssl import CERT_NONE
 tls = Tls(validate=CERT_NONE)
 
 def iniciar_sesion_ad(servidor, dominio, base_dn, usuario, password):
-    upn = f"{usuario}@{dominio}"  # Formato usuario@dominio.local
+    upn = f"{usuario}@{dominio}"  
     try:
         # Configuración del servidor LDAP con soporte de LDAPS
         server = Server(servidor, use_ssl=servidor.startswith("ldaps"), tls=tls, get_info=ALL)
@@ -35,7 +35,7 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
         # Construir el DN donde se guardará el usuario creado
         dn = f"CN={user_data['username']},{base_dn}"
         print(f"Intentando crear el usuario con DN: {dn}")
-        #Diccionario con los atributos del usuario a crear - Revisar a partir de aqui
+        #Diccionario con los atributos del usuario a crear
         atributos = {
             'objectClass': ['top', 'person', 'organizationalPerson', 'user'],
             'cn': user_data['username'],
@@ -60,10 +60,11 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
 
 def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, username, user_data):
     try:
-        conn = Connection(Server(servidor, use_ssl=servidor.startswith("ldaps"), tls=tls, get_info=ALL),
-                          user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
+        server = Server(servidor, use_ssl=servidor.startswith("ldaps"), tls=tls, get_info=ALL)
+        conn = Connection(server,user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
         dn = f"CN={username},{base_dn}"
         cambios = {key: [(MODIFY_REPLACE, [value])] for key, value in user_data.items()}
+        print (cambios)
         conn.modify(dn, changes=cambios)
     except Exception as e:
         print(f"Error al editar usuario: {e}")
@@ -130,25 +131,6 @@ def obtener_detalle_usuario(servidor, dominio, base_dn, admin_user, admin_pass, 
 
         # Procesar datos del usuario
         user_data = conn.entries[0].entry_attributes_as_dict
-#         for key, value in user_data.items():
-#             if isinstance(value, list) and len(value) > 0:
-#                 user_data[key] = value[0]  # Tomar el primer elemento de la lista
-#             elif isinstance(value, list):
-#                 user_data[key] = ""  # Si la lista está vacía, asignar una cadena vacía
-#         # Procesar grupos (memberOf)
-# # Procesar grupos (memberOf)
-#         if 'memberOf' in user_data and user_data['memberOf']:
-#             if isinstance(user_data['memberOf'], list):
-#                 user_data['memberOf'] = [
-#                     grp.split(',')[0].split('=')[1] for grp in user_data['memberOf']
-#                 ]
-#             elif isinstance(user_data['memberOf'], str):
-#                 user_data['memberOf'] = [user_data['memberOf'].split(',')[0].split('=')[1]]
-#             else:
-#                 user_data['memberOf'] = []
-#         else:
-            # user_data['memberOf'] = []
-
 
         user_data['memberOf'] = [
             grp.split(',')[0].split('=')[1] for grp in user_data.get('memberOf', [])

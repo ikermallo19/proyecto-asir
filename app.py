@@ -1,13 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario
-# import logging
 
-# Configurar logging para ldap3
-# logging.basicConfig(
-#     filename='app.log',
-#     level=logging.DEBUG,
-#     format='%(asctime)s - %(levelname)s - %(message)s'
-# )
 app = Flask(__name__)
 app.secret_key = 'secret_key'
 
@@ -76,7 +69,6 @@ def new_user():
                 "givenName": request.form["givenName"],
                 "sn": request.form["sn"]
             }
-            #print (user_data);
             # Llamar a la función para crear el usuario
             crear_usuario_ad(
                 AD_SERVER,
@@ -93,9 +85,7 @@ def new_user():
             flash(f"Error al crear el usuario: {str(e)}", "danger")
             return redirect(url_for("new_user"))
 
-    return render_template("user_form.html", action="Crear")
-
-
+    return render_template("user_creacion.html", action="Crear")
 
 
 #Edición Usuarios
@@ -107,14 +97,23 @@ def edit_user(username):
 
     if request.method == "POST":
         user_data = {
-            "givenName": request.form["givenName"],
-            "sn": request.form["sn"]
+            'givenName': request.form.get('givenName'),
+            'sn': request.form.get('sn')
         }
-        editar_usuario_ad(AD_SERVER, AD_DOMAIN, AD_BASE_DN, session['username'], session['user_data']['password'], username, user_data)
+        print(f"Valor de user['cn']: {user_data.get('cn')}")
+        editar_usuario_ad(
+            AD_SERVER,
+            AD_DOMAIN, 
+            AD_BASE_DN,
+            session['username'],
+            session['user_data']['password'],
+            username,
+            user_data
+        )
         flash("Usuario editado exitosamente.", "success")
         return redirect(url_for("dashboard"))
 
-    return render_template("user_form.html", action="Editar")
+    return render_template("user_edicion.html", action="Editar")
 
 
 
