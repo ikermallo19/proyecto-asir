@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario
+from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario, crear_grupo_ad
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
@@ -7,7 +7,7 @@ app.secret_key = 'secret_key'
 # Configuración del servidor Active Directory
 AD_SERVER = 'ldaps://leon.datanet.local'    #Servidor Active Directory
 AD_DOMAIN = 'datanet.local'                 #Dominio
-AD_BASE_DN = 'ou=USUARIOS,ou=DATANET,dc=datanet,dc=local'   #Ruta usuario
+AD_BASE_DN = 'ou=USUARIOS,ou=DATANET,dc=datanet,dc=local'   #Ruta busqueda usuarios
 
 
 #Iniciar sesión
@@ -21,7 +21,7 @@ def login():
         user_data, error = iniciar_sesion_ad(AD_SERVER, AD_DOMAIN, AD_BASE_DN, username, password)
 
         if error:
-            flash(error, "danger")
+            flash("Usuario y/o contraseña incorrectos", "danger")
             return redirect(url_for("login"))
 
         # Guardar datos en la sesión
@@ -53,7 +53,7 @@ def dashboard():
 
 
 
-#Creación usuarios
+#Creación usuarios -- SOLO QUEDA GRUPOS
 @app.route("/user/new", methods=["GET", "POST"])
 def new_user():
     if 'username' not in session or not session.get('is_admin', False):
@@ -67,7 +67,10 @@ def new_user():
                 "username": request.form["username"],
                 "password": request.form["password"],
                 "givenName": request.form["givenName"],
-                "sn": request.form["sn"]
+                "sn": request.form["sn"],
+                "grupo": request.form["grupo"],
+                "mail": request.form["mail"],
+                "UO" : request.form["UO"]
             }
             # Llamar a la función para crear el usuario
             crear_usuario_ad(
@@ -79,6 +82,7 @@ def new_user():
                 user_data
             )
             flash("Usuario creado exitosamente.", "success")
+            print (user_data)
             return redirect(url_for("dashboard"))
 
         except Exception as e:
@@ -180,6 +184,42 @@ def user_detail(username):
         flash(f"Error al obtener datos del usuario: {e}", "danger")
         return redirect(url_for("dashboard"))
 
+#Creación grupos
+@app.route("/group/new", methods=["GET", "POST"])
+def new_group():
+    if 'username' not in session or not session.get('is_admin', False):
+        flash("No tienes permisos para realizar esta acción.", "danger")
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        try:
+            # Recoge los datos del formulario
+            user_data = {
+                "group_name": request.form["group_name"],
+                "descripcion": request.form["descripcion"],
+                "grupos_superiores": request.form["grupos_superiores"],
+                "miembros": request.form["miembros"],
+                #"mail": request.form["mail"],
+                "UO" : request.form["UO"]
+            }
+            # Llamar a la función para crear el usuario
+            crear_grupo_ad(
+                AD_SERVER,
+                AD_DOMAIN,
+                AD_BASE_DN,
+                session['username'],
+                session['user_data']['password'],
+                user_data
+            )
+            flash("Grupo creado exitosamente.", "success")
+            print (user_data)
+            return redirect(url_for("dashboard"))
+
+        except Exception as e:
+            flash(f"Error al crear el grupo: {str(e)}", "danger")
+            return redirect(url_for("dashboard"))
+
+    return render_template("group_creacion.html", action="Crear")
 
 if __name__ == "__main__":
     app.run(debug=True)

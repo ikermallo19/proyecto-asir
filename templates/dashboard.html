@@ -6,13 +6,14 @@
 <h2>Panel de Control</h2>
 {% if is_admin %}
 <a href="{{ url_for('new_user') }}" class="btn btn-success mb-3">Crear Usuario</a>
+<a href="{{ url_for('new_group') }}" class="btn btn-success mb-3">Crear Grupo</a>
 {% endif %}
 
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Nombre</th>
-            <th>Correo</th>
+            <th>Ruta</th>
             <th>Acciones</th>
         </tr>
     </thead>
@@ -20,7 +21,7 @@
         {% for user in users %}
         <tr>
             <td>{{ user['cn'][0] }}</td>
-            <td>{{ user.get('mail', ['No disponible'])[0] }}</td>
+            <td>{{ user.get('distinguishedName', ['No disponible'])[0] }}</td>
             <td>
                 <a href="{{ url_for('user_detail', username=user['cn'][0]) }}" class="btn btn-info btn-sm">Info</a>
                 {% if is_admin %}                

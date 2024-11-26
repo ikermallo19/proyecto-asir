@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Usuario{% endblock %}
+
+{% block content %}                 
+<h2>{{ action }} Grupo</h2>
+<form method="POST" action="{{ url_for('new_group') }}">
+    <div class="mb-3">
+        <label for="group_name" class="form-label">Nombre de grupo</label>
+        <input type="text" name="group_name" id="group_name" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="descripcion" class="form-label">Descripción</label>
+        <input type="text" name="descripcion" id="descripcion" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="UO" class="form-label">UO</label>
+        <input type="text" name="UO" id="UO" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="grupos_superiores" class="form-label">Miembro de</label>
+        <input type="text" name="grupos_superiores" id="grupos_superiores" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="miembros" class="form-label">Miembros</label>
+        <input type="text" name="miembros" id="miembros" class="form-control">
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Crear Grupo</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
+
+</form>
+
+
+
+{% endblock %}

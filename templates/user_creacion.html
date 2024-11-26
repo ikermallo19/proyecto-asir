@@ -22,10 +22,19 @@
         <input type="text" name="sn" id="sn" class="form-control">
     </div>
     <div class="mb-3">
-        <label for="nombrecompleto" class="form-label">Nombre Completo</label>
-        <input type="text" name="nombrecompleto" id="nombrecompleto" class="form-control" required>
+        <label for="mail" class="form-label">Correo Electronico</label>
+        <input type="text" name="mail" id="mail" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="grupo" class="form-label">Nombre Grupo</label>
+        <input type="text" name="grupo" id="grupo" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="UO" class="form-label">UO</label>
+        <input type="text" name="UO" id="UO" class="form-control">
     </div>
     <button type="submit" class="btn btn-primary">Crear Usuario</button>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
 </form>
 
 
