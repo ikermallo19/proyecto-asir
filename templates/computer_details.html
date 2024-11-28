@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Equipo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Información del Usuario</h2>
+    <table class="table table-striped mt-3">
+        <tbody>
+            <tr>
+                <th>CN:</th>
+                <td>{{ computer.get('cn', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>dNSHostName:</th>
+                <td>{{ computer.get('dNSHostName', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>operatingSystem:</th>
+                <td>{{ computer.get('operatingSystem', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Email:</th>
+                <td>{{ computer.get('mail', '') | join(', ') }}</td>
+            </tr>
+            <tr>
+                <th>whenCreated:</th>
+                <td>{{ computer.get('whenCreated', '') | join(', ') }}</td>
+
+            </tr>
+            <tr>
+                <th>description:</th>
+                <td>{{ computer.get('description', '') | join(', ')}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('computer') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
+</div>
+{% endblock %}

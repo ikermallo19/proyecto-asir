@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Equipos{% endblock %}
+
+{% block content %} 
+<h2>Equipos</h2> 
+<a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>cn</th>
+            <th>distinguishedName</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for computer in computers %}
+        <tr>
+            <td>{{ computer['cn'][0] }}</td>
+            <td>{{ computer.get('distinguishedName', ['No disponible'])[0] }}</td>
+            <td>
+                <a href="{{ url_for('computer_detail', cn=computer['cn'][0]) }}" class="btn btn-info">Ver Detalles</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

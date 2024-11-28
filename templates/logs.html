@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Logs{% endblock %}
+
+{% block content %} 
+<h2>Logs</h2>       
+<a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
+<br>
+<div>
+    {% for line in logs %}
+        <p>{{ line }}</p>
+    {% endfor %}
+{% endblock %}

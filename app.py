@@ -1,14 +1,19 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario, crear_grupo_ad
+from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario, crear_grupo_ad, obtener_gpos, obtener_grupos, obtener_equipos, obtener_detalle_equipo
+import logging
 
 app = Flask(__name__)
 app.secret_key = 'secret_key'
+
+logging.basicConfig(filename='app.log', level=logging.INFO,
+                    format='%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
 
 # Configuración del servidor Active Directory
 AD_SERVER = 'ldaps://leon.datanet.local'    #Servidor Active Directory
 AD_DOMAIN = 'datanet.local'                 #Dominio
 AD_BASE_DN = 'ou=USUARIOS,ou=DATANET,dc=datanet,dc=local'   #Ruta busqueda usuarios
-
+AD_BASE_DN_EQUIPOS = 'ou=EQUIPOS,ou=DATANET,dc=datanet,dc=local'   #Ruta busqueda usuarios
+AD_BASE_GPO = 'CN=Policies,CN=System,DC=datanet,DC=local'
 
 #Iniciar sesión
 @app.route("/", methods=["GET", "POST"])
@@ -16,7 +21,7 @@ def login():
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
-
+        
         # Intentamos iniciar sesión en el AD
         user_data, error = iniciar_sesion_ad(AD_SERVER, AD_DOMAIN, AD_BASE_DN, username, password)
 
@@ -47,10 +52,59 @@ def dashboard():
         return redirect(url_for("login"))
 
     is_admin = session.get('is_admin', False)
+
+    return render_template("dashboard.html", username=session['username'], is_admin=is_admin)
+#Pantalla Usuarios
+@app.route("/user")
+def user():
+    if 'username' not in session:
+        return redirect(url_for("login"))
+
+    is_admin = session.get('is_admin', False)
     users = obtener_usuarios_ad(AD_SERVER, AD_DOMAIN, AD_BASE_DN)
 
-    return render_template("dashboard.html", username=session['username'], is_admin=is_admin, users=users)
+    return render_template("users.html", username=session['username'], is_admin=is_admin, users=users)
+#Pantalla Grupos
+@app.route("/grupo")
+def grupo():
+    if 'username' not in session:
+        return redirect(url_for("login"))
+    
+    is_admin = session.get('is_admin', False)
+    grupos = obtener_grupos(AD_SERVER, AD_DOMAIN, AD_BASE_DN_EQUIPOS)
+    return render_template("group.html", username=session['username'], is_admin=is_admin, grupos=grupos)
 
+#Pantalla GPO
+@app.route("/gpo")
+def gpo():
+    if 'username' not in session:
+        return redirect(url_for("login"))
+    
+    is_admin = session.get('is_admin', False)
+    gpos = obtener_gpos(AD_SERVER, AD_DOMAIN, AD_BASE_GPO)
+    return render_template("gpo.html", username=session['username'], is_admin=is_admin, gpos=gpos)
+
+#Pantalla Logs
+@app.route("/logs")
+def logs():
+    if 'username' not in session:
+        return redirect(url_for("login"))
+    try:
+        with open('app.log', 'r') as log:
+            log_contents = log.readlines()
+    except FileNotFoundError:
+        log_contents = ["Log file not found."]
+    return render_template('logs.html',logs=log_contents)
+
+#Pantalla Equipos
+@app.route("/computer")
+def computer():
+    if 'username' not in session:
+        return redirect(url_for("login"))
+    
+    is_admin = session.get('is_admin', False)
+    computers = obtener_equipos(AD_SERVER, AD_DOMAIN, AD_BASE_DN_EQUIPOS)
+    return render_template("computer.html", username=session['username'], is_admin=is_admin, computers=computers)
 
 
 #Creación usuarios -- SOLO QUEDA GRUPOS
@@ -98,27 +152,48 @@ def edit_user(username):
     if 'username' not in session or not session.get('is_admin', False):
         flash("No tienes permisos para realizar esta acción.", "danger")
         return redirect(url_for("dashboard"))
-
     if request.method == "POST":
-        user_data = {
-            'givenName': request.form.get('givenName'),
-            'sn': request.form.get('sn')
-        }
-        print(f"Valor de user['cn']: {user_data.get('cn')}")
-        editar_usuario_ad(
-            AD_SERVER,
-            AD_DOMAIN, 
-            AD_BASE_DN,
-            session['username'],
-            session['user_data']['password'],
-            username,
-            user_data
-        )
-        flash("Usuario editado exitosamente.", "success")
-        return redirect(url_for("dashboard"))
+        try:
+            user_data, error = obtener_detalle_usuario(
+                AD_SERVER, 
+                AD_DOMAIN, 
+                AD_BASE_DN, 
+                session['username'], 
+                session['user_data']['password'], 
+                username
+            )
+        
+            #Datos formulario
+            dn = request.form.get('dn')
+            givenName = request.form.get('givenName')
+            sn = request.form.get('sn')
+            mail = request.form.get('mail')
+            telephoneNumber = request.form.get('telephoneNumber')
+            #print(f"Valor de user['cn']: {user_data.get('cn')}")
+            atributos = {
+                'givenName': givenName,
+                'sn': sn,
+                'mail': mail,
+                'telephoneNumber': telephoneNumber
+            }
 
-    return render_template("user_edicion.html", action="Editar")
+            editar_usuario_ad(
+                AD_SERVER,
+                AD_DOMAIN, 
+                AD_BASE_DN,
+                session['username'],
+                session['user_data']['password'],
+                atributos
+            )
+            flash("Usuario editado exitosamente.", "success")
+            return redirect(url_for("dashboard"))
 
+        except Exception as e:
+            print(f"Excepción al obtener datos del usuario: {e}")
+            flash(f"Error al obtener datos del usuario: {e}", "danger")
+            return redirect(url_for("dashboard"))
+
+    return render_template("user_edicion.html", user=user_data)
 
 
 #Eliminación usuarios
@@ -147,7 +222,7 @@ def delete_user(username):
     except Exception as e:
         flash(f"Error al eliminar el usuario: {str(e)}", "danger")
 
-    return redirect(url_for("dashboard"))
+    return redirect(url_for("user"))
 
 
 #Info usuario
@@ -184,6 +259,39 @@ def user_detail(username):
         flash(f"Error al obtener datos del usuario: {e}", "danger")
         return redirect(url_for("dashboard"))
 
+#Info grupo
+@app.route("/computer/<cn>")
+def computer_detail(cn):
+    if 'username' not in session:
+        flash("Debes iniciar sesión primero.", "danger")
+        return redirect(url_for("login"))
+
+    try:
+        print(f"Intentando obtener detalles para el usuario: {cn}")
+
+        # Llamar a la función para obtener detalles del usuario
+        user_data, error = obtener_detalle_equipo(
+            AD_SERVER, 
+            AD_DOMAIN, 
+            AD_BASE_DN, 
+            session['username'], 
+            session['user_data']['password'], 
+            cn
+        )
+        if not user_data[cn]:
+            print(f"Error devuelto: {error}")
+            flash(error, "warning")
+            return redirect(url_for("dashboard"))
+
+        print(f"Datos del usuario obtenidos: {user_data}")
+
+        return render_template("computer_details.html", user=user_data)
+
+    except Exception as e:
+        print(f"Excepción al obtener datos del usuario: {e}")
+        flash(f"Error al obtener datos del usuario: {e}", "danger")
+        return redirect(url_for("dashboard"))
+    
 #Creación grupos
 @app.route("/group/new", methods=["GET", "POST"])
 def new_group():

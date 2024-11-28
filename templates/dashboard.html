@@ -5,32 +5,12 @@
 {% block content %}
 <h2>Panel de Control</h2>
 {% if is_admin %}
-<a href="{{ url_for('new_user') }}" class="btn btn-success mb-3">Crear Usuario</a>
-<a href="{{ url_for('new_group') }}" class="btn btn-success mb-3">Crear Grupo</a>
+<a href="{{ url_for('user') }}" class="btn btn-success mb-3">Usuario</a>
+<a href="{{ url_for('grupo') }}" class="btn btn-success mb-3">Grupo</a>
+<a href="{{ url_for('gpo') }}" class="btn btn-success mb-3">GPO</a>
+<a href="{{ url_for('logs') }}" class="btn btn-success mb-3">Logs</a>
+<a href="{{ url_for('computer') }}" class="btn btn-success mb-3">Equipo</a>
 {% endif %}
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Ruta</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr>
-            <td>{{ user['cn'][0] }}</td>
-            <td>{{ user.get('distinguishedName', ['No disponible'])[0] }}</td>
-            <td>
-                <a href="{{ url_for('user_detail', username=user['cn'][0]) }}" class="btn btn-info btn-sm">Info</a>
-                {% if is_admin %}                
-                <a href="{{ url_for('edit_user', username=user['cn'][0]) }}" class="btn btn-warning btn-sm">Editar</a>
-                <a href="{{ url_for('delete_user', username=user['cn'][0]) }}" class="btn btn-danger btn-sm">Eliminar</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+
 {% endblock %}

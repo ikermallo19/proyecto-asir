@@ -48,7 +48,7 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
             'userAccountControl': 546,  #La cuenta está deshabilitada
             'mail': user_data.get('mail', '')
         }
-        #Crear el usuario
+        #Crear el usuario 
         conn.add(dn, attributes=atributos)
         if conn.result['description'] == 'success':
             print(f"Usuario {user_data['username']} creado exitosamente en OU=USUARIOS.")
@@ -68,14 +68,18 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
         print(f"Error al crear usuario: {e}")
 
 
-def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, username, user_data):
+def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, atributos):
     try:
         server = Server(servidor, use_ssl=servidor.startswith("ldaps"), tls=tls, get_info=ALL)
         conn = Connection(server,user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
-        dn = f"CN={username},{base_dn}"
-        cambios = {key: [(MODIFY_REPLACE, [value])] for key, value in user_data.items()}
-        print (cambios)
-        conn.modify(dn, changes=cambios)
+        
+        #cambios = {key: [(MODIFY_REPLACE, [value])] for key, value in user_data.items()}
+        cambios = {attr: [(MODIFY_REPLACE, [val])] for attr, val in atributos.items()}
+        conn.modify(base_dn, changes=cambios)
+        # Obtener los datos del usuario
+        #usuario = conn.entries[0].entry_attributes_as_dict
+        #usuario['dn'] = conn.entries[0].entry_dn
+
     except Exception as e:
         print(f"Error al editar usuario: {e}")
 
@@ -158,6 +162,33 @@ def obtener_detalle_usuario(servidor, dominio, base_dn, admin_user, admin_pass, 
         print(f"Error al obtener datos del usuario: {e}")
         return None, f"Error al obtener datos del usuario: {e}"
 
+#Función para sacar los detalles de todos los equipos del dominio
+def obtener_detalle_equipo(servidor, dominio, base_dn, admin_user, admin_pass, cn):
+    try:
+        # Conexión al servidor LDAP
+        server = Server(servidor, use_ssl=True, get_info=ALL)
+        conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
+
+        # Filtro para buscar al usuario
+        filtro = f"(cn={cn})"
+        atributos = ['cn',  'dNSHostName', 'operatingSystem', 'whenCreated', 'description']
+
+        # Realizar la búsqueda
+        conn.search(base_dn, filtro, attributes=atributos)
+
+        if not conn.entries:
+            return None, f"Usuario {cn} no encontrado en el dominio."
+
+        # Procesar datos del usuario
+        user_data = conn.entries[0].entry_attributes_as_dict
+
+
+        return user_data, None
+
+    except Exception as e:
+        print(f"Error al obtener datos del usuario: {e}")
+        return None, f"Error al obtener datos del usuario: {e}"
+
 #Función para crear grupo
 def crear_grupo_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data):
     try:
@@ -165,8 +196,10 @@ def crear_grupo_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data
         server = Server(servidor, use_ssl=servidor.startswith("ldaps"), get_info=ALL)
         conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
         # Construir el DN donde se guardará el grupo creado
-        dn = f"cn={user_data['group_name']},ou={user_data.get('UO')},{base_dn}" 
-        #Diccionario con los atributos del grupo a crear
+        if user_data.get('UO'): 
+            dn = f"cn={user_data['group_name']},ou={user_data.get('UO')},{base_dn}" 
+        else:
+            dn = f"cn={user_data['group_name']},{base_dn}"         #Diccionario con los atributos del grupo a crear
         atributos_grupo = {
             'objectClass': ['top', 'group'],
             'cn':  user_data['group_name'],
@@ -178,8 +211,11 @@ def crear_grupo_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data
         conn.add(dn, attributes=atributos_grupo)
         if conn.result['description'] == 'success':
             #Metemos en grupo y metemos miembros
+            if user_data.get('UO'): 
+                dn_grupo_miembros = f"cn={user_data.get('miembros')},ou={user_data.get('UO')},{base_dn}"
+            else:
+                dn_grupo_miembros = f"cn={user_data.get('miembros')},{base_dn}"
             dn_grupo_superior = f"cn={user_data.get('grupos_superiores')},{base_dn}"
-            dn_grupo_miembros = f"cn={user_data.get('miembros')},ou={user_data.get('UO')},{base_dn}"
             conn.modify(dn_grupo_superior, {'member': [(MODIFY_ADD, [dn])]}) 
             conn.modify(dn, {'member': [(MODIFY_ADD, [dn_grupo_miembros])]}) 
         else:
@@ -187,3 +223,66 @@ def crear_grupo_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data
 
     except Exception as e:
         print(f"Error al crear grupo: {e}")
+
+
+#Función obtener gpos
+def obtener_gpos(servidor, dominio, base_dn):
+    try:
+        # Configurar el servidor con LDAPS o LDAP
+        server = Server(servidor, use_ssl=servidor.startswith("ldaps"), get_info=ALL)
+              # Usuario administrador (cambiar por uno válido)
+        admin_user = f"Administrador@{dominio}"  # Formato UPN
+        admin_pass = "abc123.."  # Cambiar por la contraseña real
+
+        # Conexión al servidor
+        conn = Connection(server, user=admin_user, password=admin_pass, auto_bind=True)
+        # Búsqueda de usuarios
+        conn.search(base_dn, '(objectClass=groupPolicyContainer)' , search_scope=SUBTREE, attributes=['cn', 'displayName', 'gPCFileSysPath', 'versionNumber' ])
+        gpos = [entry.entry_attributes_as_dict for entry in conn.entries]
+        print(gpos)
+        return gpos
+
+    except Exception as e:
+        print(f"Error al obtener usuarios del AD: {e}")
+        return []
+    
+def obtener_grupos(servidor, dominio, base_dn):
+    try:
+        # Configurar el servidor con LDAPS o LDAP
+        server = Server(servidor, use_ssl=servidor.startswith("ldaps"), get_info=ALL)
+              # Usuario administrador (cambiar por uno válido)
+        admin_user = f"Administrador@{dominio}"  # Formato UPN
+        admin_pass = "abc123.."  # Cambiar por la contraseña real
+
+        # Conexión al servidor
+        conn = Connection(server, user=admin_user, password=admin_pass, auto_bind=True)
+        # Búsqueda de usuarios
+        conn.search(base_dn, '(objectClass=group)' , search_scope=SUBTREE, attributes=['cn', 'distinguishedName' ])
+        grupos = [entry.entry_attributes_as_dict for entry in conn.entries]
+        print(grupos)
+        return grupos
+
+    except Exception as e:
+        print(f"Error al obtener usuarios del AD: {e}")
+        return []
+
+#Funcion obtener equipos
+def obtener_equipos(servidor, dominio, base_dn):
+    try:
+        # Configurar el servidor con LDAPS o LDAP
+        server = Server(servidor, use_ssl=servidor.startswith("ldaps"), get_info=ALL)
+              # Usuario administrador (cambiar por uno válido)
+        admin_user = f"Administrador@{dominio}"  # Formato UPN
+        admin_pass = "abc123.."  # Cambiar por la contraseña real
+
+        # Conexión al servidor
+        conn = Connection(server, user=admin_user, password=admin_pass, auto_bind=True)
+        # Búsqueda de usuarios
+        conn.search(base_dn, '(objectClass=computer)' , search_scope=SUBTREE, attributes=['cn', 'distinguishedName' ])
+        grupos = [entry.entry_attributes_as_dict for entry in conn.entries]
+        print(grupos)
+        return grupos
+
+    except Exception as e:
+        print(f"Error al obtener usuarios del AD: {e}")
+        return []

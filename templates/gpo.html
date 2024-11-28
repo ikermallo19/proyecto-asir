@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}GPO{% endblock %}
+
+{% block content %} 
+<h2>GPO</h2> 
+<a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>displayName</th>
+            <th>gPCFileSysPath</th>
+            <th>versionNumber</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for gpo in gpos %}
+        <tr>
+            <td>{{ gpo.get('displayName', ['No disponible'])[0] }}</td>
+            <td>{{ gpo.get('gPCFileSysPath', ['No disponible'])[0] }}</td>
+            <td>{{ gpo.get('versionNumber', ['No disponible'])[0] }}</td>
+            <td>
+                <a href="{{ url_for('gpo', gpo=gpo['cn'][0]) }}" class="btn btn-info btn-sm">Info</a>
+                {% if is_admin %}                
+                <a href="{{ url_for('gpo', gpo=gpo['cn'][0]) }}" class="btn btn-warning btn-sm">Editar</a>
+                <a href="{{ url_for('gpo', gpo=gpo['cn'][0]) }}" class="btn btn-danger btn-sm">Eliminar</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
