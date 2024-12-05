@@ -4,10 +4,10 @@
 
 {% block content %}
 <h2>Usuarios</h2>
-{% if is_admin %}
 <a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
+<a href="{{ url_for('reset_password') }}" class="btn btn-success mb-3">Restablecer contraseña</a>
+{% if is_admin %}
 <a href="{{ url_for('new_user') }}" class="btn btn-success mb-3">Crear Usuario</a>
-<a href="{{ url_for('logs') }}" class="btn btn-success mb-3">Restablecer contraseña</a>
 {% endif %}
 
 <table class="table table-striped">

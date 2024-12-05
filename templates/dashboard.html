@@ -4,9 +4,9 @@
 
 {% block content %}
 <h2>Panel de Control</h2>
-{% if is_admin %}
 <a href="{{ url_for('user') }}" class="btn btn-success mb-3">Usuario</a>
 <a href="{{ url_for('grupo') }}" class="btn btn-success mb-3">Grupo</a>
+{% if is_admin %}
 <a href="{{ url_for('gpo') }}" class="btn btn-success mb-3">GPO</a>
 <a href="{{ url_for('logs') }}" class="btn btn-success mb-3">Logs</a>
 <a href="{{ url_for('computer') }}" class="btn btn-success mb-3">Equipo</a>

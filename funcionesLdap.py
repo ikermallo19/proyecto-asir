@@ -1,9 +1,11 @@
 from ldap3 import Server, Connection, ALL, MODIFY_REPLACE,MODIFY_ADD, SUBTREE, Tls
 from ssl import CERT_NONE
+#import subprocess
 
 # Configuración TLS para ignorar certificados en entornos de prueba
 tls = Tls(validate=CERT_NONE)
 
+#Función para iniciar sesión
 def iniciar_sesion_ad(servidor, dominio, base_dn, usuario, password):
     upn = f"{usuario}@{dominio}"  
     try:
@@ -67,7 +69,6 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
     except Exception as e:
         print(f"Error al crear usuario: {e}")
 
-
 def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, atributos):
     try:
         server = Server(servidor, use_ssl=servidor.startswith("ldaps"), tls=tls, get_info=ALL)
@@ -107,7 +108,6 @@ def eliminar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user
     except Exception as e:
         print(f"Error al eliminar usuario: {e}")
 
-
 def obtener_usuarios_ad(servidor, dominio, base_dn):
     try:
         # Configurar el servidor con LDAPS o LDAP
@@ -130,7 +130,6 @@ def obtener_usuarios_ad(servidor, dominio, base_dn):
     except Exception as e:
         print(f"Error al obtener usuarios del AD: {e}")
         return []
-
 
 #Función para sacar los detalles de todos los usuarios del dominio
 def obtener_detalle_usuario(servidor, dominio, base_dn, admin_user, admin_pass, username):
@@ -177,17 +176,17 @@ def obtener_detalle_equipo(servidor, dominio, base_dn, admin_user, admin_pass, c
         conn.search(base_dn, filtro, attributes=atributos)
 
         if not conn.entries:
-            return None, f"Usuario {cn} no encontrado en el dominio."
+            return None, f"Equipo {cn} no encontrado en el dominio."
 
         # Procesar datos del usuario
-        user_data = conn.entries[0].entry_attributes_as_dict
+        computer_data = conn.entries[0].entry_attributes_as_dict
 
 
-        return user_data, None
+        return computer_data, None
 
     except Exception as e:
-        print(f"Error al obtener datos del usuario: {e}")
-        return None, f"Error al obtener datos del usuario: {e}"
+        print(f"Error al obtener datos del equipo: {e}")
+        return None, f"Error al obtener datos del equipo: {e}"
 
 #Función para crear grupo
 def crear_grupo_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data):
@@ -223,7 +222,6 @@ def crear_grupo_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_data
 
     except Exception as e:
         print(f"Error al crear grupo: {e}")
-
 
 #Función obtener gpos
 def obtener_gpos(servidor, dominio, base_dn):
@@ -286,3 +284,87 @@ def obtener_equipos(servidor, dominio, base_dn):
     except Exception as e:
         print(f"Error al obtener usuarios del AD: {e}")
         return []
+
+#Función para sacar los detalles de todos los grupo del dominio
+def obtener_detalle_grupo(servidor, dominio, base_dn, admin_user, admin_pass, cn):
+    try:
+        # Conexión al servidor LDAP
+        server = Server(servidor, use_ssl=True, get_info=ALL)
+        conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
+
+        # Filtro para buscar al grupo
+        filtro = f"(cn={cn})"
+        atributos = ['cn',  'member', 'memberOf', 'distinguishedName', 'description']
+
+        # Realizar la búsqueda
+        conn.search(base_dn, filtro, attributes=atributos)
+
+        if not conn.entries:
+            return None, f"Grupo {cn} no encontrado en el dominio."
+
+        # Procesar datos del grupo
+        group_data = conn.entries[0].entry_attributes_as_dict
+        group_data['member'] = group_data.get('member', [])
+        group_data['memberOf'] = group_data.get('memberOf', [])
+
+        return group_data, None
+
+    except Exception as e:
+        print(f"Error al obtener datos del grupo: {e}")
+        return None, f"Error al obtener datos del grupo: {e}"    
+
+#Función restablecer contraseña propia
+def cambiar_contrasena_ad(servidor, dominio, base_dn, admin_user, admin_pass, new_password):
+    try:
+        # Conectar al servidor LDAP
+        server = Server(servidor, use_ssl=True, get_info=ALL)
+        conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
+
+        # Buscar al usuario autenticado
+        search_filter = f"(sAMAccountName={admin_user})"
+        conn.search(base_dn, search_filter, attributes=['distinguishedName'])
+
+        if not conn.entries:
+            raise Exception(f"Usuario '{admin_user}' no encontrado en el dominio.")
+
+        # Obtener el DN del usuario
+        user_dn = conn.entries[0].entry_dn
+
+        # Cambiar la contraseña
+        conn.extend.microsoft.modify_password(user_dn, new_password)
+
+        # Verificar si la operación fue exitosa
+        if conn.result['result'] == 0:
+            print("Contraseña cambiada exitosamente.")
+        else:
+            raise Exception(f"Error al cambiar la contraseña: {conn.result['description']}")
+
+    except Exception as e:
+        raise Exception(f"No se pudo cambiar la contraseña: {str(e)}")
+
+#Función eliminar grupos
+def eliminar_grupos_ad(servidor, dominio, base_dn, admin_user, admin_pass, cn):
+    try:
+        # Configurar conexión al servidor LDAP
+        server = Server(servidor, use_ssl=servidor.startswith("ldaps"), get_info=ALL)
+        conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
+        # Conseguir UO donde está guardado el grupo
+        search_filter = f"(cn={cn})"
+        conn.search(search_base=base_dn, search_filter=search_filter, search_scope=SUBTREE, attributes=['distinguishedName'])
+
+
+        # Construir el Distinguished Name (DN) del grupo
+        group_dn = conn.entries[0].distinguishedName.value
+
+        # Intentar eliminar el grupo
+        conn.delete(group_dn)
+
+        if conn.result['description'] == 'success':
+            print(f"Grupo {group_dn} eliminado correctamente.")
+        else:
+            print(f"Error al eliminar grupo: {conn.result['description']}")
+
+    except Exception as e:
+        print(f"Error al eliminar gruopo: {e}")
+
+#Borrar cache kerberos

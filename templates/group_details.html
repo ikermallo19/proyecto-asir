@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle del Grupo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Información del Grupo</h2>
+    <table class="table table-striped mt-3">
+        <tbody>
+            <tr>
+                <th>Nombre</th>
+                <td>{{ group.get('cn', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Miembros</th>
+                <td>{{ group.get('member', '') | join(', ') }}</td>
+            </tr>
+            <tr>
+                <th>Miembro de</th>
+                <td>{{ group.get('memberOf', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Ruta</th>
+                <td>{{ group.get('distinguishedName', '') | join(', ')}}</td>
+            </tr>
+            <tr>
+                <th>Descripción</th>
+                <td>{{ group.get('description', '') | join(', ') }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ url_for('grupo') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
+</div>
+{% endblock %}

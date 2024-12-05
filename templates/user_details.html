@@ -8,27 +8,27 @@
     <table class="table table-striped mt-3">
         <tbody>
             <tr>
-                <th>Nombre de Usuario (CN):</th>
+                <th>Username</th>
                 <td>{{ user.get('cn', '') | join(', ')}}</td>
             </tr>
             <tr>
-                <th>Nombre:</th>
+                <th>Nombre</th>
                 <td>{{ user.get('givenName', '') | join(', ')}}</td>
             </tr>
             <tr>
-                <th>Apellidos:</th>
+                <th>Apellidos</th>
                 <td>{{ user.get('sn', '') | join(', ')}}</td>
             </tr>
             <tr>
-                <th>Email:</th>
+                <th>Email</th>
                 <td>{{ user.get('mail', '') | join(', ') }}</td>
             </tr>
             <tr>
-                <th>Grupos:</th>
+                <th>Grupos</th>
                 <td>{{ ', '.join(user.get('memberOf', [])) }}</td>
             </tr>
             <tr>
-                <th>Distinguished Name (DN):</th>
+                <th>Ruta</th>
                 <td>{{ user.get('distinguishedName', '') | join(', ')}}</td>
             </tr>
         </tbody>

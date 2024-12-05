@@ -10,15 +10,15 @@
     <thead>
         <tr>
             <th>displayName</th>
-            <th>gPCFileSysPath</th>
-            <th>versionNumber</th>
+            <th>Ruta</th>
+            <th>Numero de versión</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
         {% for gpo in gpos %}
         <tr>
-            <td>{{ gpo.get('displayName', ['No disponible'])[0] }}</td>
+            <td>{{ gpo.get('Nombre', ['No disponible'])[0] }}</td>
             <td>{{ gpo.get('gPCFileSysPath', ['No disponible'])[0] }}</td>
             <td>{{ gpo.get('versionNumber', ['No disponible'])[0] }}</td>
             <td>

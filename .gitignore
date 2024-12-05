@@ -1,4 +1,4 @@
 ad/
 __pycache__/
 ldap_cert.pem
-app.log
+logs/
