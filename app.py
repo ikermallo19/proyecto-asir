@@ -36,9 +36,9 @@ def login():
             return redirect(url_for("login"))
 
         # Guardar datos en la sesión
-        session['username'] = username
+        session['username'] = username          #Guardamos usuario de la sesión
         session['user_data'] = user_data
-        session['user_data']['password'] = password  # Guardar la contraseña en la sesión
+        session['user_data']['password'] = password  # Guardar la contraseña de la sesión
         session['is_admin'] = "Administradores" in user_data.get('memberOf', [])
 
         flash("Inicio de sesión exitoso.", "success")
@@ -119,18 +119,14 @@ def computer():
 #Cambio contraseña
 @app.route("/reset_password", methods=["GET", "POST"])
 def reset_password():
-    # Verificar si el usuario está autenticado
     if 'username' not in session:
         flash("Debes iniciar sesión primero.", "danger")
         return redirect(url_for("login"))
-
-    # Si el método es GET, se muestra el formulario
+    
     if request.method == "GET":
         return render_template("restablecer_password.html")
 
-    # Si el método es POST, se procesa el formulario
     if request.method == "POST":
-        # Obtener los datos del formulario
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
 
@@ -140,7 +136,6 @@ def reset_password():
             return redirect(url_for("reset_password"))
 
         try:
-            # Cambiar la contraseña en AD
             cambiar_contrasena_ad(
                 AD_SERVER,
                 AD_DOMAIN,
@@ -152,7 +147,7 @@ def reset_password():
 
             flash("Contraseña cambiada exitosamente. Por favor, inicia sesión nuevamente.", "success")
 
-            # Cerrar la sesión del usuario para forzar a que vuelva a iniciar con la nueva contraseña
+            #Cerramos la sesión, para volver a autenticarme con la nueva contraseña
             session.clear()
             return redirect(url_for("login"))
 
@@ -169,7 +164,6 @@ def new_user():
 
     if request.method == "POST":
         try:
-            # Recoge los datos del formulario
             user_data = {
                 "username": request.form["username"],
                 "password": request.form["password"],
@@ -180,7 +174,7 @@ def new_user():
                 "UO" : request.form["UO"],
                 "telephoneNumber": request.form["telephoneNumber"],
             }
-            # Llamar a la función para crear el usuario
+            
             crear_usuario_ad(
                 AD_SERVER,
                 AD_DOMAIN,
@@ -202,12 +196,10 @@ def new_user():
 #Edición Usuarios
 @app.route("/user/edit/<username>", methods=["GET", "POST"])
 def edit_user(username):
-    # Verificar permisos
     if "username" not in session or not session.get("is_admin", False):
         flash("No tienes permisos para realizar esta acción.", "danger")
         return redirect(url_for("dashboard"))
 
-    # Inicializar user_data
     user_data = {
         "givenName": "",
         "sn": "",
@@ -218,7 +210,6 @@ def edit_user(username):
 
     if request.method == "GET":
         try:
-            # Obtener detalles del usuario
             user_data = obtener_detalle_usuario2(
                 AD_SERVER,
                 AD_DOMAIN,
@@ -233,8 +224,6 @@ def edit_user(username):
         except Exception as e:
             flash(f"Error al obtener datos del usuario: {e}", "danger")
             return redirect(url_for("dashboard"))
-
-        # Renderizar formulario con datos del usuario
         return render_template("user_edicion.html", user=user_data)
 
     if request.method == "POST":
@@ -249,8 +238,7 @@ def edit_user(username):
             if not givenName or not sn or not mail or not telephoneNumber or not distinguishedName:
                 flash("Todos los campos son obligatorios, incluido el Distinguished Name.", "danger")
                 return render_template("user_edicion.html", user=user_data)
-
-            # Crear diccionario de atributos
+            
             atributos = {
                 "givenName": givenName,
                 "sn": sn,
@@ -259,7 +247,6 @@ def edit_user(username):
                 "distinguishedName": distinguishedName,
             }
 
-            # Editar usuario en Active Directory
             exito = editar_usuario_ad(
                 AD_SERVER,
                 AD_DOMAIN,
@@ -278,8 +265,6 @@ def edit_user(username):
         except Exception as e:
             flash(f"Error al editar el usuario: {e}", "danger")
             print(f"Excepción al editar usuario: {e}")
-
-        # Renderizar formulario con los datos actuales en caso de error
         return render_template("user_edicion.html", user=user_data)
 
 #Eliminación usuarios
@@ -290,18 +275,12 @@ def delete_user(username):
         return redirect(url_for("dashboard"))
 
     try:
-        # Verifica que la contraseña está presente
-        if 'password' not in session['user_data']:
-            flash("Contraseña no encontrada en la sesión. Por favor, inicia sesión nuevamente.", "danger")
-            return redirect(url_for("logout"))
-
-        # Elimina el usuario
         eliminar_usuario_ad(
             AD_SERVER,
             AD_DOMAIN,
             AD_BASE_DN,
-            session['username'],  # Usuario actual
-            session['user_data']['password'],  # Contraseña desde la sesión
+            session['username'], 
+            session['user_data']['password'], 
             username
         )
         flash(f"Usuario {username} eliminado exitosamente.", "success")
@@ -319,8 +298,6 @@ def user_detail(username):
 
     try:
         print(f"Intentando obtener detalles para el usuario: {username}")
-
-        # Llamar a la función para obtener detalles del usuario
         user_data, error = obtener_detalle_usuario(
             AD_SERVER, 
             AD_DOMAIN, 
@@ -352,9 +329,7 @@ def computer_detail(cn):
         return redirect(url_for("login"))
 
     try:
-        print(f"Intentando obtener detalles para el usuario: {cn}")
-
-        # Llamar a la función para obtener detalles del usuario
+        print(f"Intentando obtener detalles para el equipo: {cn}")
         computer_data, error = obtener_detalle_equipo(
             AD_SERVER, 
             AD_DOMAIN, 
@@ -387,8 +362,6 @@ def group_detail(cn):
 
     try:
         print(f"Intentando obtener detalles para el grupo: {cn}")
-
-        # Llamar a la función para obtener detalles del grupo
         group_data, error = obtener_detalle_grupo(
             AD_SERVER, 
             AD_DOMAIN, 
@@ -421,8 +394,6 @@ def gpo_detail(cn):
 
     try:
         print(f"Intentando obtener detalles para la GPO: {cn}")
-
-        # Llamar a la función para obtener detalles de la GPO
         gpo_data, error = obtener_detalle_gpo(
             AD_SERVER,
             AD_DOMAIN,
@@ -453,16 +424,13 @@ def new_group():
 
     if request.method == "POST":
         try:
-            # Recoge los datos del formulario
             user_data = {
                 "group_name": request.form["group_name"],
                 "descripcion": request.form["descripcion"],
                 "grupos_superiores": request.form["grupos_superiores"],
                 "miembros": request.form["miembros"],
-                #"mail": request.form["mail"],
                 "UO" : request.form["UO"]
             }
-            # Llamar a la función para crear el usuario
             crear_grupo_ad(
                 AD_SERVER,
                 AD_DOMAIN,
@@ -489,13 +457,12 @@ def delete_group(cn):
         return redirect(url_for("dashboard"))
 
     try:
-        # Elimina el grupo
         eliminar_grupos_ad(
             AD_SERVER,
             AD_DOMAIN,
             AD_BASE_DN,
-            session['username'],  # Usuario actual
-            session['user_data']['password'],  # Contraseña desde la sesión
+            session['username'],  
+            session['user_data']['password'],
             cn
         )
         flash(f"Grupo {cn} eliminado exitosamente.", "success")
