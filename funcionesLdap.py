@@ -1,6 +1,5 @@
-from ldap3 import Server, Connection, ALL, MODIFY_REPLACE,MODIFY_ADD, SUBTREE, Tls
+from ldap3 import Server, Connection, ALL, MODIFY_REPLACE,MODIFY_ADD,MODIFY_DELETE, SUBTREE, Tls
 from ssl import CERT_NONE
-#import subprocess
 
 # Configuración TLS para ignorar certificados en entornos de prueba
 tls = Tls(validate=CERT_NONE)
@@ -48,7 +47,8 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
             'sn': user_data.get('sn', ''),
             'sAMAccountName': user_data['username'],
             'userAccountControl': 546,  #La cuenta está deshabilitada
-            'mail': user_data.get('mail', '')
+            'mail': user_data.get('mail', ''),
+            'telephoneNumber': user_data.get('telephoneNumber', '')
         }
         #Crear el usuario 
         conn.add(dn, attributes=atributos)
@@ -69,21 +69,36 @@ def crear_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user_da
     except Exception as e:
         print(f"Error al crear usuario: {e}")
 
+#Función para editar usuario
 def editar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, atributos):
+    """
+    Edita un usuario en Active Directory.
+    """
     try:
-        server = Server(servidor, use_ssl=servidor.startswith("ldaps"), tls=tls, get_info=ALL)
-        conn = Connection(server,user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
-        
-        #cambios = {key: [(MODIFY_REPLACE, [value])] for key, value in user_data.items()}
-        cambios = {attr: [(MODIFY_REPLACE, [val])] for attr, val in atributos.items()}
-        conn.modify(base_dn, changes=cambios)
-        # Obtener los datos del usuario
-        #usuario = conn.entries[0].entry_attributes_as_dict
-        #usuario['dn'] = conn.entries[0].entry_dn
+        server = Server(servidor, use_ssl=True, get_info=ALL)
+        conn = Connection(
+            server,
+            user=f"{admin_user}@{dominio}",
+            password=admin_pass,
+            auto_bind=True
+        )
 
+        user_dn = atributos.pop("distinguishedName")  # Usamos el DN para identificar el usuario
+        cambios = {attr: [(MODIFY_REPLACE, [val])] for attr, val in atributos.items() if val}
+
+        conn.modify(user_dn, changes=cambios)
+
+        if conn.result["result"] == 0:
+            print("Usuario editado correctamente.")
+            return True
+        else:
+            print(f"Error al editar el usuario: {conn.result['description']}")
+            return False
     except Exception as e:
-        print(f"Error al editar usuario: {e}")
+        print(f"Error al editar usuario en AD: {e}")
+        return False
 
+#Función para eliminar usuario
 def eliminar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, username):
     try:
         # Configurar conexión al servidor LDAP
@@ -108,6 +123,7 @@ def eliminar_usuario_ad(servidor, dominio, base_dn, admin_user, admin_pass, user
     except Exception as e:
         print(f"Error al eliminar usuario: {e}")
 
+#Función para obtener usuarios
 def obtener_usuarios_ad(servidor, dominio, base_dn):
     try:
         # Configurar el servidor con LDAPS o LDAP
@@ -131,7 +147,7 @@ def obtener_usuarios_ad(servidor, dominio, base_dn):
         print(f"Error al obtener usuarios del AD: {e}")
         return []
 
-#Función para sacar los detalles de todos los usuarios del dominio
+#Función para sacar los detalles de todos los usuarios
 def obtener_detalle_usuario(servidor, dominio, base_dn, admin_user, admin_pass, username):
     try:
         # Conexión al servidor LDAP
@@ -140,7 +156,7 @@ def obtener_detalle_usuario(servidor, dominio, base_dn, admin_user, admin_pass, 
 
         # Filtro para buscar al usuario
         filtro = f"(sAMAccountName={username})"
-        atributos = ['cn', 'givenName', 'sn', 'mail', 'memberOf', 'distinguishedName']
+        atributos = ['cn', 'givenName', 'sn', 'mail', 'memberOf', 'distinguishedName', 'telephoneNumber']
 
         # Realizar la búsqueda
         conn.search(base_dn, filtro, attributes=atributos)
@@ -160,6 +176,40 @@ def obtener_detalle_usuario(servidor, dominio, base_dn, admin_user, admin_pass, 
     except Exception as e:
         print(f"Error al obtener datos del usuario: {e}")
         return None, f"Error al obtener datos del usuario: {e}"
+
+#Función para sacar los detalles del usuario a editar
+def obtener_detalle_usuario2(servidor, dominio, base_dn, admin_user, admin_pass, username):
+    try:
+        server = Server(servidor, use_ssl=True, get_info=ALL)
+        conn = Connection(
+            server,
+            user=f"{admin_user}@{dominio}",
+            password=admin_pass,
+            auto_bind=True
+        )
+
+        filtro = f"(sAMAccountName={username})"
+        atributos = ["givenName", "sn", "mail", "telephoneNumber", "distinguishedName"]
+        conn.search(base_dn, filtro, attributes=atributos)
+
+        if not conn.entries:
+            print(f"No se encontró el usuario: {username}")
+            return None
+
+        entry = conn.entries[0]
+        user_data = {
+            "givenName": entry.givenName.value,
+            "sn": entry.sn.value,
+            "mail": entry.mail.value,
+            "telephoneNumber": entry.telephoneNumber.value,
+            "distinguishedName": entry.distinguishedName.value,
+        }
+        print(f"Datos recuperados: {user_data}")
+        return user_data
+
+    except Exception as e:
+        print(f"Error al obtener datos del usuario: {e}")
+        return None
 
 #Función para sacar los detalles de todos los equipos del dominio
 def obtener_detalle_equipo(servidor, dominio, base_dn, admin_user, admin_pass, cn):
@@ -243,7 +293,8 @@ def obtener_gpos(servidor, dominio, base_dn):
     except Exception as e:
         print(f"Error al obtener usuarios del AD: {e}")
         return []
-    
+
+#Función para obtener grupos
 def obtener_grupos(servidor, dominio, base_dn):
     try:
         # Configurar el servidor con LDAPS o LDAP
@@ -304,8 +355,17 @@ def obtener_detalle_grupo(servidor, dominio, base_dn, admin_user, admin_pass, cn
 
         # Procesar datos del grupo
         group_data = conn.entries[0].entry_attributes_as_dict
-        group_data['member'] = group_data.get('member', [])
-        group_data['memberOf'] = group_data.get('memberOf', [])
+        # Procesar "member" para extraer solo los CN
+        group_data["member"] = [
+            dn.split(",")[0].split("=")[1] if "CN=" in dn else dn
+            for dn in group_data.get("member", [])
+        ]
+
+        # Procesar "memberOf" para extraer solo los CN
+        group_data["memberOf"] = [
+            dn.split(",")[0].split("=")[1] if "CN=" in dn else dn
+            for dn in group_data.get("memberOf", [])
+        ]
 
         return group_data, None
 
@@ -367,4 +427,28 @@ def eliminar_grupos_ad(servidor, dominio, base_dn, admin_user, admin_pass, cn):
     except Exception as e:
         print(f"Error al eliminar gruopo: {e}")
 
-#Borrar cache kerberos
+#Función para sacar detalles de las GPOS
+def obtener_detalle_gpo(servidor, dominio, base_dn, admin_user, admin_pass, cn):
+    try:
+        # Conexión al servidor LDAP
+        server = Server(servidor, use_ssl=True, get_info=ALL)
+        conn = Connection(server, user=f"{admin_user}@{dominio}", password=admin_pass, auto_bind=True)
+
+        # Filtro para buscar la GPO
+        filtro = f"(cn={cn})"
+        atributos = ['cn', 'displayName', 'distinguishedName', 'gPCFileSysPath', 'whenCreated']
+
+        # Realizar la búsqueda
+        conn.search(base_dn, filtro, attributes=atributos)
+
+        if not conn.entries:
+            return None, f"GPO {cn} no encontrada en el dominio."
+
+        # Procesar datos de la GPO
+        gpo_data = conn.entries[0].entry_attributes_as_dict
+
+        return gpo_data, None
+
+    except Exception as e:
+        print(f"Error al obtener datos de la GPO: {e}")
+        return None, f"Error al obtener datos de la GPO: {e}"

@@ -1,34 +1,46 @@
 {% extends 'base.html' %}
 
-{% block title %}Grupo{% endblock %}
+{% block title %}Gestión de Grupos{% endblock %}
 
-{% block content %}        
-<h2>Grupo</h2>
-<a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
-{% if is_admin %}
-<a href="{{ url_for('new_group') }}" class="btn btn-success mb-3">Crear Grupo</a>
-{% endif %}
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>displayName</th>
-            <th>Ruta</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for grupo in grupos %}
-        <tr>
-            <td>{{ grupo['cn'][0] }}</td>
-            <td>{{ grupo.get('distinguishedName', ['No disponible'])[0] }}</td>
-            <td>
-                <a href="{{ url_for('group_detail', cn=grupo['cn'][0]) }}" class="btn btn-info btn-sm">Ver Detalles</a>
-                {% if is_admin %}                
-                <a href="{{ url_for('delete_group', cn=grupo['cn'][0]) }}" class="btn btn-danger btn-sm">Eliminar</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center text-primary">Gestión de Grupos</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">
+        <i class="bi bi-arrow-left-circle"></i> Volver al Panel
+    </a>
+    {% if is_admin %}
+    <a href="{{ url_for('new_group') }}" class="btn btn-success mb-3">
+        <i class="bi bi-plus-circle"></i> Crear Grupo
+    </a>
+    {% endif %}
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-center"><i class="bi bi-people"></i> Nombre</th>
+                    <th class="text-center"><i class="bi bi-folder2-open"></i> Ruta</th>
+                    <th class="text-center"><i class="bi bi-tools"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grupo in grupos %}
+                <tr>
+                    <td class="text-center">{{ grupo['cn'][0] }}</td>
+                    <td class="text-center">{{ grupo.get('distinguishedName', ['No disponible'])[0] }}</td>
+                    <td class="text-center">
+                        <a href="{{ url_for('group_detail', cn=grupo['cn'][0]) }}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i> Ver Detalles
+                        </a>
+                        {% if is_admin %}
+                        <a href="{{ url_for('delete_group', cn=grupo['cn'][0]) }}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

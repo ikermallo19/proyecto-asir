@@ -1,38 +1,52 @@
 {% extends 'base.html' %}
 
-{% block title %}Usuarios{%endblock %}
+{% block title %}Gestión de Usuarios{% endblock %}
 
 {% block content %}
-<h2>Usuarios</h2>
-<a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
-<a href="{{ url_for('reset_password') }}" class="btn btn-success mb-3">Restablecer contraseña</a>
-{% if is_admin %}
-<a href="{{ url_for('new_user') }}" class="btn btn-success mb-3">Crear Usuario</a>
-{% endif %}
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nombre</th>
-            <th>Ruta</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-        <tr>
-            <td>{{ user['cn'][0] }}</td>
-            <td>{{ user.get('distinguishedName', ['No disponible'])[0] }}</td>
-            <td>
-                <a href="{{ url_for('user_detail', username=user['cn'][0]) }}" class="btn btn-info btn-sm">Info</a>
-                {% if is_admin %}                
-                <a href="{{ url_for('edit_user', username=user['cn'][0]) }}" class="btn btn-warning btn-sm">Editar</a>
-                <a href="{{ url_for('delete_user', username=user['cn'][0]) }}" class="btn btn-danger btn-sm">Eliminar</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+<div class="container mt-4">
+    <h2 class="mb-4 text-center text-primary">Gestión de Usuarios</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">
+        <i class="bi bi-arrow-left-circle"></i> Volver al Panel
+    </a>
+    <a href="{{ url_for('reset_password') }}" class="btn btn-success mb-3">
+        <i class="bi bi-person-plus"></i> Restablecer Contraseña
+    </a>
+    {% if is_admin %}
+    <a href="{{ url_for('new_user') }}" class="btn btn-success mb-3">
+        <i class="bi bi-person-plus"></i> Crear Usuario
+    </a>
+    {% endif %}
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-center"><i class="bi bi-person"></i> Nombre</th>
+                    <th class="text-center"><i class="bi bi-folder2-open"></i> Ruta</th>
+                    <th class="text-center"><i class="bi bi-tools"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td class="text-center">{{ user['cn'][0] }}</td>
+                    <td class="text-center">{{ user.get('distinguishedName', ['No disponible'])[0] }}</td>
+                    <td class="text-center">
+                        <a href="{{ url_for('user_detail', username=user['cn'][0]) }}" class="btn btn-info btn-sm">
+                            <i class="bi bi-eye"></i> Ver Detalles
+                        </a>
+                        {% if is_admin %}
+                        <a href="{{ url_for('edit_user', username=user['cn'][0]) }}" class="btn btn-warning btn-sm">
+                            <i class="bi bi-pencil-square"></i> Editar
+                        </a>
+                        <a href="{{ url_for('delete_user', username=user['cn'][0]) }}" class="btn btn-danger btn-sm">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

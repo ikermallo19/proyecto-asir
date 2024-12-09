@@ -3,14 +3,66 @@
 {% block title %}Panel de Control{% endblock %}
 
 {% block content %}
-<h2>Panel de Control</h2>
-<a href="{{ url_for('user') }}" class="btn btn-success mb-3">Usuario</a>
-<a href="{{ url_for('grupo') }}" class="btn btn-success mb-3">Grupo</a>
-{% if is_admin %}
-<a href="{{ url_for('gpo') }}" class="btn btn-success mb-3">GPO</a>
-<a href="{{ url_for('logs') }}" class="btn btn-success mb-3">Logs</a>
-<a href="{{ url_for('computer') }}" class="btn btn-success mb-3">Equipo</a>
-{% endif %}
-
-
+<div class="container mt-4">
+    <h2 class="mb-4 text-center text-primary">Panel de Control</h2>
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-lg text-center">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title mb-3">Gestión de Usuarios</h5>
+                    <p class="card-text">Administra las cuentas de los usuarios del dominio.</p>
+                    <a href="{{ url_for('user') }}" class="btn btn-primary mt-auto">
+                        <i class="bi bi-people-fill"></i> Gestionar Usuarios
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-lg text-center">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title mb-3">Gestión de Grupos</h5>
+                    <p class="card-text">Controla los grupos de usuarios en el dominio.</p>
+                    <a href="{{ url_for('grupo') }}" class="btn btn-success mt-auto">
+                        <i class="bi bi-people"></i> Gestionar Grupos
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if is_admin %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-lg text-center">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title mb-3">Políticas de Grupo (GPO)</h5>
+                    <p class="card-text">Gestiona las políticas de grupo del dominio.</p>
+                    <a href="{{ url_for('gpo') }}" class="btn btn-warning mt-auto">
+                        <i class="bi bi-file-earmark-text"></i> Gestionar GPO
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-lg text-center">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title mb-3">Logs del Sistema</h5>
+                    <p class="card-text">Consulta los registros del sistema.</p>
+                    <a href="{{ url_for('logs') }}" class="btn btn-info mt-auto">
+                        <i class="bi bi-journal"></i> Ver Logs
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-lg text-center">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title mb-3">Gestión de Equipos</h5>
+                    <p class="card-text">Administra los equipos conectados al dominio.</p>
+                    <a href="{{ url_for('computer') }}" class="btn btn-danger mt-auto">
+                        <i class="bi bi-pc"></i> Gestionar Equipos
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

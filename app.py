@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario, crear_grupo_ad, obtener_gpos, obtener_grupos, obtener_equipos, obtener_detalle_equipo, obtener_detalle_grupo, cambiar_contrasena_ad, eliminar_grupos_ad
+from funcionesLdap import iniciar_sesion_ad, crear_usuario_ad, editar_usuario_ad, eliminar_usuario_ad, obtener_usuarios_ad, obtener_detalle_usuario, crear_grupo_ad, obtener_gpos, obtener_grupos, obtener_equipos, obtener_detalle_equipo, obtener_detalle_grupo, cambiar_contrasena_ad, eliminar_grupos_ad, obtener_detalle_usuario2, obtener_detalle_gpo
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
@@ -7,20 +7,17 @@ app = Flask(__name__)
 app.secret_key = 'secret_key'
 
 #Configuración de los logs 
-logger = logging.getLogger('my_logger')
-logger.setLevel(logging.INFO)
-handler = TimedRotatingFileHandler('logs/app.log', when= 'W0',interval=1,backupCount=4)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s  - %(message)s',datefmt= '%Y-%m-%d %H:%M:%S')                    
+logger = logging.getLogger()  
+logger.setLevel(logging.INFO) 
+handler = TimedRotatingFileHandler('logs/system.log', when='W0', interval=1, backupCount=4)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-logger.info("Aplicación iniciada con exito")                
-
-logging.info("Esta es una entrada de log de prueba")
 
 # Configuración del servidor Active Directory
 AD_SERVER = 'ldaps://leon.datanet.local'    #Servidor Active Directory
 AD_DOMAIN = 'datanet.local'                 #Dominio
-AD_BASE_DN = 'ou=USUARIOS,ou=DATANET,dc=datanet,dc=local'   #Ruta busqueda usuarios
+AD_BASE_DN = 'ou=USUARIOS,ou=DATANET,dc=datanet,dc=local'   #Ruta busqueda usuarios y grupos
 AD_BASE_DN_EQUIPOS = 'ou=EQUIPOS,ou=DATANET,dc=datanet,dc=local'   #Ruta busqueda equipos
 AD_BASE_GPO = 'CN=Policies,CN=System,DC=datanet,DC=local'           #Ruta busqueda politicas de grupo
 
@@ -180,7 +177,8 @@ def new_user():
                 "sn": request.form["sn"],
                 "grupo": request.form["grupo"],
                 "mail": request.form["mail"],
-                "UO" : request.form["UO"]
+                "UO" : request.form["UO"],
+                "telephoneNumber": request.form["telephoneNumber"],
             }
             # Llamar a la función para crear el usuario
             crear_usuario_ad(
@@ -201,55 +199,88 @@ def new_user():
 
     return render_template("user_creacion.html", action="Crear")
 
-
 #Edición Usuarios
 @app.route("/user/edit/<username>", methods=["GET", "POST"])
 def edit_user(username):
-    if 'username' not in session or not session.get('is_admin', False):
+    # Verificar permisos
+    if "username" not in session or not session.get("is_admin", False):
         flash("No tienes permisos para realizar esta acción.", "danger")
         return redirect(url_for("dashboard"))
+
+    # Inicializar user_data
+    user_data = {
+        "givenName": "",
+        "sn": "",
+        "mail": "",
+        "telephoneNumber": "",
+        "distinguishedName": "",
+    }
+
     if request.method == "GET":
-        user_data = obtener_detalle_usuario(
-            AD_SERVER, 
-            AD_DOMAIN, 
-            AD_BASE_DN, 
-            session['username'], 
-            session['user_data']['password'], 
-            username
-        )
-        return render_template("user_edicion.html", user=user_data)
-    if request.method == "POST":
-        #Datos formulario
-        dn = request.form.get('dn')
-        givenName = request.form.get('givenName')
-        sn = request.form.get('sn')
-        mail = request.form.get('mail')
-        telephoneNumber = request.form.get('telephoneNumber')
-        #print(f"Valor de user['cn']: {user_data.get('cn')}")
-        atributos = {
-            'givenName': givenName,
-            'sn': sn,
-            'mail': mail,
-            'telephoneNumber': telephoneNumber
-        }
         try:
-            editar_usuario_ad(
+            # Obtener detalles del usuario
+            user_data = obtener_detalle_usuario2(
                 AD_SERVER,
-                AD_DOMAIN, 
+                AD_DOMAIN,
                 AD_BASE_DN,
-                session['username'],
-                session['user_data']['password'],
-                atributos
+                session["username"],
+                session["user_data"]["password"],
+                username
             )
-            flash("Usuario editado exitosamente.", "success")
+            if not user_data:
+                flash("El usuario no fue encontrado.", "danger")
+                return redirect(url_for("dashboard"))
+        except Exception as e:
+            flash(f"Error al obtener datos del usuario: {e}", "danger")
             return redirect(url_for("dashboard"))
 
+        # Renderizar formulario con datos del usuario
+        return render_template("user_edicion.html", user=user_data)
+
+    if request.method == "POST":
+        try:
+            # Obtener datos del formulario
+            givenName = request.form.get("givenName")
+            sn = request.form.get("sn")
+            mail = request.form.get("mail")
+            telephoneNumber = request.form.get("telephoneNumber")
+            distinguishedName = request.form.get("distinguishedName")
+
+            if not givenName or not sn or not mail or not telephoneNumber or not distinguishedName:
+                flash("Todos los campos son obligatorios, incluido el Distinguished Name.", "danger")
+                return render_template("user_edicion.html", user=user_data)
+
+            # Crear diccionario de atributos
+            atributos = {
+                "givenName": givenName,
+                "sn": sn,
+                "mail": mail,
+                "telephoneNumber": telephoneNumber,
+                "distinguishedName": distinguishedName,
+            }
+
+            # Editar usuario en Active Directory
+            exito = editar_usuario_ad(
+                AD_SERVER,
+                AD_DOMAIN,
+                AD_BASE_DN,
+                session["username"],
+                session["user_data"]["password"],
+                atributos
+            )
+
+            if exito:
+                flash("Usuario editado exitosamente.", "success")
+                return redirect(url_for("dashboard"))
+            else:
+                flash("No se pudo editar el usuario. Verifica los datos.", "danger")
+
         except Exception as e:
-            print(f"Excepción al obtener datos del usuario: {e}")
-            flash(f"Error al obtener datos del usuario: {e}", "danger")
-            return redirect(url_for("user"))
+            flash(f"Error al editar el usuario: {e}", "danger")
+            print(f"Excepción al editar usuario: {e}")
 
-
+        # Renderizar formulario con los datos actuales en caso de error
+        return render_template("user_edicion.html", user=user_data)
 
 #Eliminación usuarios
 @app.route("/user/delete/<username>")
@@ -278,7 +309,6 @@ def delete_user(username):
         flash(f"Error al eliminar el usuario: {str(e)}", "danger")
 
     return redirect(url_for("user"))
-
 
 #Info usuario
 @app.route("/user/<username>")
@@ -381,7 +411,39 @@ def group_detail(cn):
         print(f"Excepción al obtener datos del grupo: {e}")
         flash(f"Error al obtener datos del grupo: {e}", "danger")
         return redirect(url_for("dashboard"))
-        
+
+#Info GPO      
+@app.route("/gpo/<cn>")
+def gpo_detail(cn):
+    if 'username' not in session:
+        flash("Debes iniciar sesión primero.", "danger")
+        return redirect(url_for("login"))
+
+    try:
+        print(f"Intentando obtener detalles para la GPO: {cn}")
+
+        # Llamar a la función para obtener detalles de la GPO
+        gpo_data, error = obtener_detalle_gpo(
+            AD_SERVER,
+            AD_DOMAIN,
+            AD_BASE_GPO ,
+            session['username'],
+            session['user_data']['password'],
+            cn
+        )
+        if not gpo_data:
+            print(f"Error devuelto: {error}")
+            flash(error, "warning")
+            return redirect(url_for("dashboard"))
+
+        print(f"Datos de la GPO obtenidos: {gpo_data}")
+        return render_template("gpo_details.html", gpo=gpo_data)
+
+    except Exception as e:
+        print(f"Excepción al obtener datos de la GPO: {e}")
+        flash(f"Error al obtener datos de la GPO: {e}", "danger")
+        return redirect(url_for("dashboard"))
+
 #Creación grupos
 @app.route("/group/new", methods=["GET", "POST"])
 def new_group():

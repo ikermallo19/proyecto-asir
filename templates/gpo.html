@@ -1,35 +1,38 @@
 {% extends 'base.html' %}
 
-{% block title %}GPO{% endblock %}
+{% block title %}Gestión de Políticas de Grupo{% endblock %}
 
-{% block content %} 
-<h2>GPO</h2> 
-<a href="{{ url_for('dashboard') }}" class="btn btn-success mb-3">Inicio</a>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>displayName</th>
-            <th>Ruta</th>
-            <th>Numero de versión</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for gpo in gpos %}
-        <tr>
-            <td>{{ gpo.get('Nombre', ['No disponible'])[0] }}</td>
-            <td>{{ gpo.get('gPCFileSysPath', ['No disponible'])[0] }}</td>
-            <td>{{ gpo.get('versionNumber', ['No disponible'])[0] }}</td>
-            <td>
-                <a href="{{ url_for('gpo', gpo=gpo['cn'][0]) }}" class="btn btn-info btn-sm">Info</a>
-                {% if is_admin %}                
-                <a href="{{ url_for('gpo', gpo=gpo['cn'][0]) }}" class="btn btn-warning btn-sm">Editar</a>
-                <a href="{{ url_for('gpo', gpo=gpo['cn'][0]) }}" class="btn btn-danger btn-sm">Eliminar</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4 text-center text-primary">Gestión de Políticas de Grupo (GPO)</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">
+        <i class="bi bi-arrow-left-circle"></i> Volver al Panel
+    </a>
+    <div class="table-responsive">
+        <table class="table table-hover table-striped table-bordered align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th class="text-center"><i class="bi bi-file-earmark-text"></i> Nombre</th>
+                    <th class="text-center"><i class="bi bi-folder2-open"></i> Ruta</th>
+                    <th class="text-center"><i class="bi bi-gear-fill"></i> Número de Versión</th>
+                    <th class="text-center"><i class="bi bi-tools"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gpo in gpos %}
+                    <tr>
+                        <td class="text-center">{{ gpo.get('Nombre', ['No disponible'])[0] }}</td>
+                        <td class="text-center">{{ gpo.get('gPCFileSysPath', ['No disponible'])[0] }}</td>
+                        <td class="text-center">{{ gpo.get('versionNumber', ['No disponible'])[0] }}</td>
+                        <td class="text-center">
+                            <a href="{{ url_for('gpo_detail', cn=gpo['cn'][0]) }}" class="btn btn-info btn-sm">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

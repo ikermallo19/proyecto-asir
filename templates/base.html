@@ -10,23 +10,34 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('dashboard') }}">DATANET.LOCAL</a>
-            <div class="d-flex">
-                {% if session['username'] %}
-                <span class="navbar-text text-light me-3">Bienvenido, {{ session['username'] }}</span>
-                <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Cerrar sesión</a>
-                {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if session['username'] %}
+                    <li class="nav-item">
+                        <span class="nav-link text-light">Bienvenido, {{ session['username'] }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Cerrar sesión</a>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
     <div class="container mt-4">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-        <div class="alert alert-warning">
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
             {{ messages[0] }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
         {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

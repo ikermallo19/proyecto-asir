@@ -3,37 +3,48 @@
 {% block title %}Detalle del Usuario{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Información del Usuario</h2>
-    <table class="table table-striped mt-3">
-        <tbody>
-            <tr>
-                <th>Username</th>
-                <td>{{ user.get('cn', '') | join(', ')}}</td>
-            </tr>
-            <tr>
-                <th>Nombre</th>
-                <td>{{ user.get('givenName', '') | join(', ')}}</td>
-            </tr>
-            <tr>
-                <th>Apellidos</th>
-                <td>{{ user.get('sn', '') | join(', ')}}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{ user.get('mail', '') | join(', ') }}</td>
-            </tr>
-            <tr>
-                <th>Grupos</th>
-                <td>{{ ', '.join(user.get('memberOf', [])) }}</td>
-            </tr>
-            <tr>
-                <th>Ruta</th>
-                <td>{{ user.get('distinguishedName', '') | join(', ')}}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ url_for('user') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Información del Usuario</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Username</th>
+                        <td>{{ user.get('cn', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Nombre</th>
+                        <td>{{ user.get('givenName', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Apellidos</th>
+                        <td>{{ user.get('sn', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Email</th>
+                        <td>{{ user.get('mail', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Teléfono</th>
+                        <td>{{ user.get('telephoneNumber', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Grupos</th>
+                        <td>{{ ', '.join(user.get('memberOf', [])) }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Ruta</th>
+                        <td>{{ user.get('distinguishedName', '') | join(', ') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <a href="{{ url_for('user') }}" class="btn btn-secondary mt-3">
+                <i class="bi bi-arrow-left"></i> Volver a la Lista
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

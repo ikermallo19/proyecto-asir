@@ -3,40 +3,55 @@
 {% block title %}{{ action }} Usuario{% endblock %}
 
 {% block content %}
-<h2>{{ action }} Usuario</h2>
-<form method="POST" action="{{ url_for('new_user') }}">
-    <div class="mb-3">
-        <label for="username" class="form-label">Nombre de usuario</label>
-        <input type="text" name="username" id="username" class="form-control" required>
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">{{ action }} Usuario</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('new_user') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Nombre de usuario</label>
+                    <input type="text" name="username" id="username" class="form-control" placeholder="Ingresa el nombre de usuario" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" name="password" id="password" class="form-control" placeholder="Ingresa la contraseña" required>
+                </div>
+                <div class="mb-3">
+                    <label for="givenName" class="form-label">Nombre</label>
+                    <input type="text" name="givenName" id="givenName" class="form-control" placeholder="Ingresa el nombre">
+                </div>
+                <div class="mb-3">
+                    <label for="sn" class="form-label">Apellidos</label>
+                    <input type="text" name="sn" id="sn" class="form-control" placeholder="Ingresa los apellidos">
+                </div>
+                <div class="mb-3">
+                    <label for="mail" class="form-label">Correo Electrónico</label>
+                    <input type="email" name="mail" id="mail" class="form-control" placeholder="Ingresa el correo electrónico">
+                </div>
+                <div class="mb-3">
+                    <label for="telephoneNumber" class="form-label">Telefono</label>
+                    <input type="number" name="telephoneNumber" id="telephoneNumber" class="form-control" placeholder="Ingresa el numero de telefono">
+                </div>
+                <div class="mb-3">
+                    <label for="grupo" class="form-label">Nombre del Grupo</label>
+                    <input type="text" name="grupo" id="grupo" class="form-control" placeholder="Ingresa el grupo al que pertenece" required>
+                </div>
+                <div class="mb-3">
+                    <label for="UO" class="form-label">UO</label>
+                    <input type="text" name="UO" id="UO" class="form-control" placeholder="Unidad Organizativa">
+                </div>
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-person-plus"></i> Crear Usuario
+                    </button>
+                    <a href="{{ url_for('user') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver a la Lista
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="mb-3">
-        <label for="password" class="form-label">Contraseña</label>
-        <input type="password" name="password" id="password" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label for="givenName" class="form-label">Nombre</label>
-        <input type="text" name="givenName" id="givenName" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label for="sn" class="form-label">Apellidos</label>
-        <input type="text" name="sn" id="sn" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label for="mail" class="form-label">Correo Electronico</label>
-        <input type="text" name="mail" id="mail" class="form-control">
-    </div>
-    <div class="mb-3">
-        <label for="grupo" class="form-label">Nombre Grupo</label>
-        <input type="text" name="grupo" id="grupo" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label for="UO" class="form-label">UO</label>
-        <input type="text" name="UO" id="UO" class="form-control">
-    </div>
-    <button type="submit" class="btn btn-primary">Crear Usuario</button>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
-</form>
-
-
-
+</div>
 {% endblock %}

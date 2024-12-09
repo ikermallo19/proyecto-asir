@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de la GPO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Información de la GPO</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <tbody>
+                    {% if gpo.get('cn') %}
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Nombre</th>
+                        <td>{{ gpo.get('cn', '') | join(', ') }}</td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if gpo.get('displayName') %}
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Nombre Visible</th>
+                        <td>{{ gpo.get('displayName', '') | join(', ') }}</td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if gpo.get('distinguishedName') %}
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Ruta</th>
+                        <td>{{ gpo.get('distinguishedName', '') | join(', ') }}</td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if gpo.get('gPCFileSysPath') %}
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Ruta del Archivo</th>
+                        <td>{{ gpo.get('gPCFileSysPath', '') | join(', ') }}</td>
+                    </tr>
+                    {% endif %}
+                    
+                    {% if gpo.get('whenCreated') %}
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Fecha de Creación</th>
+                        <td>{{ gpo.get('whenCreated', '') | join(', ') }}</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-3">
+                <i class="bi bi-arrow-left"></i> Volver a la Lista
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

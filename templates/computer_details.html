@@ -3,33 +3,40 @@
 {% block title %}Detalle del Equipo{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Información del Equipo</h2>
-    <table class="table table-striped mt-3">
-        <tbody>
-            <tr>
-                <th>Nombre Equipo</th>
-                <td>{{ computer.get('cn', '') | join(', ')}}</td>
-            </tr>
-            <tr>
-                <th>DNS Equipo</th>
-                <td>{{ computer.get('dNSHostName', '') | join(', ') }}</td>
-            </tr>
-            <tr>
-                <th>Sistema Operativo</th>
-                <td>{{ computer.get('operatingSystem', '') | join(', ')}}</td>
-            </tr>
-            <tr>
-                <th>Añadido al dominio</th>
-                <td>{{ computer.get('whenCreated', '') | join(', ')}}</td>
-            </tr>
-            <tr>
-                <th>Descripcion</th>
-                <td>{{ computer.get('description', '') | join(', ') }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ url_for('computer') }}" class="btn btn-secondary mt-3">Volver a la Lista</a>
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0">Información del Equipo</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <tbody>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Nombre Equipo</th>
+                        <td>{{ computer.get('cn', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">DNS Equipo</th>
+                        <td>{{ computer.get('dNSHostName', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Sistema Operativo</th>
+                        <td>{{ computer.get('operatingSystem', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Añadido al Dominio</th>
+                        <td>{{ computer.get('whenCreated', '') | join(', ') }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row" class="bg-light text-end">Descripción</th>
+                        <td>{{ computer.get('description', '') | join(', ') }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <a href="{{ url_for('computer') }}" class="btn btn-secondary mt-3">
+                <i class="bi bi-arrow-left"></i> Volver a la Lista
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}
